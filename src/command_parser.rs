@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug)] //used for printing the enum using the {:?} format
 pub(crate) enum Command {
     LS,
     GET,
