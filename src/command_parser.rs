@@ -1,5 +1,3 @@
-use std::io::stdin;
-
 #[derive(Debug)]
 pub(crate) enum Command {
     LS,
@@ -22,6 +20,12 @@ pub(crate) fn determine_command(input: String) -> Command {
         "quit" => Command::QUIT,
         _ => Command::NONE
     }
+}
+
+pub(crate) fn determine_parameter(input: String) -> String {
+    let filtered_string = remove_line_breaks(input);
+    let parts: Vec<&str> = filtered_string.split(" ").collect();
+    parts[1..].join(" ")
 }
 
 fn remove_line_breaks(input: String) -> String {

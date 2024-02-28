@@ -2,7 +2,7 @@ mod command_parser;
 mod ftp_client;
 
 use std::io::stdin;
-use crate::command_parser::Command;
+use crate::command_parser::{Command, determine_parameter};
 
 fn main() {
     let ftp_address = "localhost:21";
@@ -14,40 +14,26 @@ fn main() {
 
         loop {
             let mut input = String::new();
-            let b1 = stdin().read_line(&mut input);
+            let result = stdin().read_line(&mut input);
 
-            let command = command_parser::determine_command(input);
-            println!("{:?}", command);
+            let command = command_parser::determine_command(input.clone());
 
             match command {
-                Command::LS => {client.list();}
-                Command::GET => {client.get("test.png");}
-                Command::ASCII => {client.ascii_mode();}
-                Command::BINARY => {client.binary_mode();}
-                Command::QUIT => {break;}
-                Command::NONE => {println!("Invalid command");}
+                Command::LS => { client.list(); }
+                Command::GET => {
+                    let param = determine_parameter(input);
+                    client.get(param.as_str());
+                }
+                Command::ASCII => { client.ascii_mode(); }
+                Command::BINARY => { client.binary_mode(); }
+                Command::QUIT => {
+                    client.close();
+                    break;
+                }
+                Command::NONE => { println!("Invalid command"); }
             }
         }
     } else {
         println!("Failed to connect to ftp server");
     }
-
-
-
-    // let mut input = String::new();
-    // let b1 = stdin().read_line(&mut input);
-    //
-    // let command = command_parser::determine_command(input);
-    // println!("{:?}", command);
-
-
-    // if command == command_parser::Command::LS {
-    //     //ftp_client::ls();
-    // } else if(command == command_parser::Command::GET) {
-    //     // ftp_client::get();
-    // } else if(command == command_parser::Command::MGET) {
-    //     // ftp_client::mget();
-    // } else {
-    //     println!("Invalid command");
-    // }
 }

@@ -108,6 +108,8 @@ impl FtpClient {
         file.write_all(&*response_data).expect("error writing to file");
         println!("File saved!");
 
+        self.close_data_stream(&mut data_stream)?;
+
         Ok(())
     }
 
@@ -128,6 +130,12 @@ impl FtpClient {
     fn close_data_stream(&mut self, data_stream: &mut TcpStream) -> std::io::Result<()> {
         data_stream.shutdown(std::net::Shutdown::Both)?;
         Ok(())
+    }
+
+    pub (crate) fn close(&mut self) {
+        println!("Closing session!");
+        send_command(&mut self.control_stream, "QUIT\r\n").unwrap();
+        self.control_stream.shutdown(std::net::Shutdown::Both).unwrap();
     }
 }
 
