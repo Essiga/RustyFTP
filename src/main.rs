@@ -21,7 +21,7 @@ fn main() {
 
             match command {
                 Command::LS => {client.list();}
-                Command::GET => {}
+                Command::GET => {client.get("example");}
                 Command::ASCII => {client.ascii_mode();}
                 Command::BINARY => {client.binary_mode();}
                 Command::QUIT => {break;}

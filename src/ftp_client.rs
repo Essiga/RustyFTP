@@ -37,15 +37,7 @@ impl FtpClient {
         println!("LIST COMMAND:");
         let mut response = String::new();
 
-        send_command(&mut self.control_stream, "EPSV\r\n")?; //using epsv instead of pasv because it's newer and allows for ipv6
-        read_response(&mut self.control_stream, &mut response)?;
-        #[cfg(debug_assertions)]
-        println!("Server response: {}", response);
-        let port = parse_port(&response);
-
-        #[cfg(debug_assertions)]
-        println!("Connecting to data port: {}", port);
-        let mut data_stream = TcpStream::connect(format!("localhost:{}", port))?;
+        let mut data_stream = self.open_data_stream()?;
 
         #[cfg(debug_assertions)]
         println!("Sending LIST command");
@@ -62,8 +54,7 @@ impl FtpClient {
         #[cfg(debug_assertions)]
         println!("Server response: {}", response);
 
-
-        data_stream.shutdown(std::net::Shutdown::Both)?;
+        self.close_data_stream(&mut data_stream)?;
         Ok(())
     }
 
@@ -82,6 +73,51 @@ impl FtpClient {
         read_response(&mut self.control_stream, &mut response)?;
         #[cfg(debug_assertions)]
         println!("Server response: {}", response);
+        Ok(())
+    }
+
+    pub (crate) fn get(&mut self, filename: &str) -> std::io::Result<()> {
+        let mut response = String::new();
+
+        let mut data_stream = self.open_data_stream()?;
+
+        send_command(&mut self.control_stream, &format!("RETR {}\r\n", filename))?;
+        read_response(&mut self.control_stream, &mut response)?;
+
+        if response.starts_with("550") {
+            println!("File not found");
+            return Ok(());
+        }
+
+        #[cfg(debug_assertions)]
+        println!("Server response: {}", response);
+
+
+
+        read_response(&mut data_stream, &mut response)?;
+        println!("{}", response);
+
+        read_response(&mut self.control_stream, &mut response)?;
+
+        Ok(())
+    }
+
+    fn open_data_stream(&mut self) -> std::io::Result<TcpStream> {
+        let mut response = String::new();
+
+        send_command(&mut self.control_stream, "EPSV\r\n")?; //using epsv instead of pasv because it's newer and allows for ipv6
+        read_response(&mut self.control_stream, &mut response)?;
+        #[cfg(debug_assertions)]
+        println!("Server response: {}", response);
+        let port = parse_port(&response);
+
+        #[cfg(debug_assertions)]
+        println!("Connecting to data port: {}", port);
+        TcpStream::connect(format!("localhost:{}", port))
+    }
+
+    fn close_data_stream(&mut self, data_stream: &mut TcpStream) -> std::io::Result<()> {
+        data_stream.shutdown(std::net::Shutdown::Both)?;
         Ok(())
     }
 }
@@ -112,4 +148,11 @@ fn parse_port(response : &str) -> String{
 
 fn remove_line_breaks(input: &str) -> String {
     return input.replace("\r\n", "");
+}
+
+fn parse_ftp_response(response: &str) -> (i32, String) {
+    let mut parts: Vec<&str> = response.splitn(2, ' ').collect();
+    let code = parts[0].parse().unwrap();
+    let message = parts[1].to_string();
+    (code, message)
 }
