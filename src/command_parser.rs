@@ -4,7 +4,9 @@ use std::io::stdin;
 pub(crate) enum Command {
     LS,
     GET,
-    MGET,
+    ASCII,
+    BINARY,
+    QUIT,
     NONE,
 }
 
@@ -15,7 +17,9 @@ pub(crate) fn determine_command(input: String) -> Command {
     match parts[0] {
         "ls" => Command::LS,
         "get" => Command::GET,
-        "mget" => Command::MGET,
+        "ascii" => Command::ASCII,
+        "binary" => Command::BINARY,
+        "quit" => Command::QUIT,
         _ => Command::NONE
     }
 }

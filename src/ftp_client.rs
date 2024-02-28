@@ -66,6 +66,24 @@ impl FtpClient {
         data_stream.shutdown(std::net::Shutdown::Both)?;
         Ok(())
     }
+
+    pub (crate) fn ascii_mode(&mut self) -> std::io::Result<()> {
+        let mut response = String::new();
+        send_command(&mut self.control_stream, "TYPE A\r\n")?;
+        read_response(&mut self.control_stream, &mut response)?;
+        #[cfg(debug_assertions)]
+        println!("Server response: {}", response);
+        Ok(())
+    }
+
+    pub (crate) fn binary_mode(&mut self) -> std::io::Result<()> {
+        let mut response = String::new();
+        send_command(&mut self.control_stream, "TYPE I\r\n")?;
+        read_response(&mut self.control_stream, &mut response)?;
+        #[cfg(debug_assertions)]
+        println!("Server response: {}", response);
+        Ok(())
+    }
 }
 
 fn read_response(stream: &mut TcpStream, response: &mut String) -> std::io::Result<()> {

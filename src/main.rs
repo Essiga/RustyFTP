@@ -22,7 +22,9 @@ fn main() {
             match command {
                 Command::LS => {client.list();}
                 Command::GET => {}
-                Command::MGET => {}
+                Command::ASCII => {client.ascii_mode();}
+                Command::BINARY => {client.binary_mode();}
+                Command::QUIT => {break;}
                 Command::NONE => {println!("Invalid command");}
             }
         }
