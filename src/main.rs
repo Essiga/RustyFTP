@@ -21,7 +21,7 @@ fn main() {
 
             match command {
                 Command::LS => {client.list();}
-                Command::GET => {client.get("example");}
+                Command::GET => {client.get("test.png");}
                 Command::ASCII => {client.ascii_mode();}
                 Command::BINARY => {client.binary_mode();}
                 Command::QUIT => {break;}

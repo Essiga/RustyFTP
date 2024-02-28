@@ -1,6 +1,7 @@
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::{io, str};
+use std::fs::File;
 
 pub(crate) struct FtpClient{
     control_stream : TcpStream,
@@ -92,12 +93,20 @@ impl FtpClient {
         #[cfg(debug_assertions)]
         println!("Server response: {}", response);
 
+        let mut response_data: Vec<u8> = Vec::new();
 
-
-        read_response(&mut data_stream, &mut response)?;
-        println!("{}", response);
+        while let Ok(bytes_read) = read_response_bytes(&mut data_stream, &mut response_data) {
+            if bytes_read == 0 {
+                break;
+            }
+        }
 
         read_response(&mut self.control_stream, &mut response)?;
+        println!("Server response: {}", response);
+
+        let mut file = File::create("test.png")?;
+        file.write_all(&*response_data).expect("error writing to file");
+        println!("File saved!");
 
         Ok(())
     }
@@ -122,13 +131,20 @@ impl FtpClient {
     }
 }
 
-fn read_response(stream: &mut TcpStream, response: &mut String) -> std::io::Result<()> {
-    let mut buffer = [0; 512];
+fn read_response(stream: &mut TcpStream, response: &mut String) -> std::io::Result<usize> {
+    let mut buffer = [0; 4096];
     let bytes_read = stream.read(&mut buffer)?;
     *response = str::from_utf8(&buffer[..bytes_read])
         .unwrap_or_default()
         .to_string();
-    Ok(())
+    Ok(bytes_read)
+}
+
+fn read_response_bytes(stream: &mut TcpStream, response: &mut Vec<u8>) -> std::io::Result<usize> {
+    let mut buffer = [0; 4096];
+    let bytes_read = stream.read(&mut buffer)?;
+    response.append(&mut buffer.to_vec());
+    Ok(bytes_read)
 }
 
 fn send_command(stream: &mut TcpStream, command: &str) -> std::io::Result<()> {
