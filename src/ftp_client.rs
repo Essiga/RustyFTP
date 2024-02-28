@@ -104,7 +104,7 @@ impl FtpClient {
         read_response(&mut self.control_stream, &mut response)?;
         println!("Server response: {}", response);
 
-        let mut file = File::create("test.png")?;
+        let mut file = File::create(filename)?;
         file.write_all(&*response_data).expect("error writing to file");
         println!("File saved!");
 
@@ -151,7 +151,7 @@ fn read_response(stream: &mut TcpStream, response: &mut String) -> std::io::Resu
 fn read_response_bytes(stream: &mut TcpStream, response: &mut Vec<u8>) -> std::io::Result<usize> {
     let mut buffer = [0; 4096];
     let bytes_read = stream.read(&mut buffer)?;
-    response.append(&mut buffer.to_vec());
+    response.append(&mut buffer[.. bytes_read].to_vec());
     Ok(bytes_read)
 }
 
